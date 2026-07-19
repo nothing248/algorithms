@@ -128,6 +128,23 @@ CSS_STYLE = """
 st.markdown(CSS_STYLE, unsafe_allow_html=True)
 
 # ==========================================
+# --- Google Analytics 4 (GA4) 集成 ---
+# ==========================================
+try:
+    from streamlit_gtag import st_gtag
+    # 使用 streamlit-google-analytics-tag 第三方库进行 GA4 上报
+    st_gtag(
+        id="G-1P3NZM3830",
+        event_name="page_view",
+        params={
+            "page_title": "外卖骑手算法进化史交互 Demo",
+            "page_path": "/"
+        }
+    )
+except ImportError:
+    pass
+
+# ==========================================
 # --- 核心算法实现 (Segment Based Tracking) ---
 # ==========================================
 

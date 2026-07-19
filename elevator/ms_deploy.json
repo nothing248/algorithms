@@ -1,4 +1,5 @@
 {
+  "$schema": "https://www.modelscope.cn/api/v1/studios/deploy_schema.json",
   "sdk_type": "streamlit",
   "resource_configuration": "platform/2v-cpu-16g-mem",
   "base_image": "(Recommanded for CPU and GPU)ubuntu22.04-py312-torch2.10.0-modelscope1.37.0"
