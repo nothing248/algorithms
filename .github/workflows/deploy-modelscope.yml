@@ -52,5 +52,5 @@ jobs:
           # 登录 ModelScope 平台
           modelscope login --token ${{ secrets.MODELSCOPE_TOKEN }}
           # 调用 CLI 工具进行部署
-          ms studio deploy --studio-id ${{ secrets.MODELSCOPE_SPACE_ID }}
+          ms deploy ${{ secrets.MODELSCOPE_USERNAME }}/${{ secrets.MODELSCOPE_SPACE_ID }} --repo-type studio
           echo "Deployment triggered successfully!"
