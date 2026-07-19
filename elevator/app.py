@@ -130,19 +130,22 @@ st.markdown(CSS_STYLE, unsafe_allow_html=True)
 # ==========================================
 # --- Google Analytics 4 (GA4) 集成 ---
 # ==========================================
-try:
-    from streamlit_gtag import st_gtag
-    # 使用 streamlit-google-analytics-tag 第三方库进行 GA4 上报
-    st_gtag(
-        id="G-1P3NZM3830",
-        event_name="page_view",
-        params={
-            "page_title": "外卖骑手算法进化史交互 Demo",
-            "page_path": "/"
-        }
-    )
-except ImportError:
-    pass
+# try:
+#     from streamlit_gtag import st_gtag
+#     # 优先在父窗口使用 streamlit-google-analytics-tag 第三方库挂载标准的 gtag.js 进行 GA4 追踪
+#     st_gtag(
+#         id="G-1P3NZM3830",
+#         config={
+#             'cookie_flags': 'SameSite=None; Secure'
+#         },
+#         event_name="page_view",
+#         params={
+#             "page_title": "外卖骑手算法进化史交互 Demo",
+#             "page_path": "/"
+#         }
+#     )
+# except ImportError:
+#     pass
 
 # ==========================================
 # --- 核心算法实现 (Segment Based Tracking) ---
@@ -1039,3 +1042,30 @@ with tab_anim:
             
         st.success("🏁 派送任务圆满完成！")
         st.session_state['anim_triggered'] = False
+
+# ==========================================
+# --- Google Analytics 4 (GA4) 集成 ---
+# ==========================================
+GA_ID = "G-1P3NZM3830"
+# 双轨自适应降级（Hybrid Fallback）前端探测器：
+# 1. 尝试检测父窗口中 streamlit-google-analytics-tag 是否成功生效（即 parent.gtag 存在且没被跨域安全拦截）；
+# 2. 若同源且成功生效，则跳过降级以防止本地测试时数据双重上报；
+# 3. 若发生跨域报错（说明部署在云端托管且域名不同源被拦截），或 parent.gtag 未定义（加载失败），
+#    则自动无缝降级，在当前沙箱 iframe 内部通过 new Image() 拼装并发送官方 collect 像素请求，保障数据 100% 上报！
+# ga_html_template = """<!DOCTYPE html><html><head></head><body><script>setTimeout(function(){var parentUrl="";var useFallback=false;var isTargetGtagRegistered=false;var isSameDomain=false;try{if(window.parent.document&&window.top.document){isSameDomain=true;}}catch(e){isSameDomain=false;}if(isSameDomain){try{if(window.parent&&window.parent.gtag){var scripts=window.parent.document.head.querySelectorAll("script");for(var i=0;i<scripts.length;i++){if(scripts[i].src&&scripts[i].src.indexOf("{GA_ID}")!==-1){isTargetGtagRegistered=true;break;}}}}catch(e){}if(!isTargetGtagRegistered){try{if(window.top&&window.top.gtag){var scripts=window.top.document.head.querySelectorAll("script");for(var i=0;i<scripts.length;i++){if(scripts[i].src&&scripts[i].src.indexOf("{GA_ID}")!==-1){isTargetGtagRegistered=true;break;}}}}catch(e){}}}if(isSameDomain&&isTargetGtagRegistered){console.log("Streamlit GA4: Gtag for {GA_ID} is active on same-domain parent/top window. Skipping fallback.");}else{useFallback=true;}try{parentUrl=window.parent.location.href;}catch(e){parentUrl=document.referrer;}var debugUrl=window.location.origin+"/?ga_debug_tid={GA_ID}&ts="+Date.now();var imgDebug=new Image();imgDebug.src=debugUrl;if(useFallback){var cid=Math.random().toString(36).substring(2,15)+Math.random().toString(36).substring(2,15);var collectUrl="https://www.google-analytics.com/g/collect?v=2&tid={GA_ID}&cid="+encodeURIComponent(cid)+"&en=page_view&dl="+encodeURIComponent(parentUrl||window.location.href);var imgCollect=new Image();imgCollect.src=collectUrl;console.log("Streamlit GA4: Fallback activated. Real GA4 collect request sent.");}},2500);</script></body></html>"""
+# ga_html = ga_html_template.replace("{GA_ID}", GA_ID)
+# st.iframe(ga_html, height=20)
+# 使用标准的 gtag.js 加载，同时指定 SameSite=None 和 Secure，允许 iframe 内写 Cookie
+
+# 1. 直接使用 st.html 将全局跟踪代码注入主页面，彻底干掉 iframe
+st.html("""
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1P3NZM3830"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1P3NZM3830',{'cookie_flags': 'SameSite=None;Secure','page_location': window.location.href});
+</script>
+""",unsafe_allow_javascript=True)
+
