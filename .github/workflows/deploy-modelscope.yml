@@ -19,7 +19,7 @@ jobs:
       - name: Sync Code to ModelScope (No Force Push)
         run: |
           # 1. 克隆魔塔创空间仓库至临时目录
-          git clone "https://oauth2:${{ secrets.MODELSCOPE_USERNAME }}:${{ secrets.MODELSCOPE_TOKEN }}@www.modelscope.cn/studios/${{ secrets.MODELSCOPE_USERNAME }}/${{ secrets.MODELSCOPE_SPACE_ID }}.git" ../deploy_space
+          git clone "https://oauth2:${{ secrets.MODELSCOPE_TOKEN }}@www.modelscope.cn/studios/${{ secrets.MODELSCOPE_USERNAME }}/${{ secrets.MODELSCOPE_SPACE_ID }}.git" ../deploy_space
           
           # 2. 清空临时目录（保留 .git 历史记录）
           cd ../deploy_space
