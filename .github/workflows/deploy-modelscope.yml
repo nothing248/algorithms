@@ -17,13 +17,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Sync Code to ModelScope (No Force Push)
-        env:
-          MODELSCOPE_USERNAME: ${{ secrets.MODELSCOPE_USERNAME }}
-          MODELSCOPE_TOKEN: ${{ secrets.MODELSCOPE_TOKEN }}
-          MODELSCOPE_SPACE_URL: ${{ secrets.MODELSCOPE_SPACE_URL }}
         run: |
           # 1. 克隆魔塔创空间仓库至临时目录
-          git clone "https://${MODELSCOPE_USERNAME}:${MODELSCOPE_TOKEN}@${MODELSCOPE_SPACE_URL}" ../deploy_space
+          git clone "https://oauth2:${{ secrets.MODELSCOPE_USERNAME }}:${{ secrets.MODELSCOPE_TOKEN }}@www.modelscope.cn/studios/${{ secrets.MODELSCOPE_USERNAME }}/${{ secrets.MODELSCOPE_SPACE_ID }}.git" ../deploy_space
           
           # 2. 清空临时目录（保留 .git 历史记录）
           cd ../deploy_space
