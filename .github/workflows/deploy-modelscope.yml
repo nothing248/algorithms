@@ -1,0 +1,60 @@
+name: Deploy Elevator to ModelScope Space
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'elevator/**'
+      - '.github/workflows/deploy-modelscope.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Sync Code to ModelScope (No Force Push)
+        env:
+          MODELSCOPE_USERNAME: ${{ secrets.MODELSCOPE_USERNAME }}
+          MODELSCOPE_TOKEN: ${{ secrets.MODELSCOPE_TOKEN }}
+          MODELSCOPE_SPACE_URL: ${{ secrets.MODELSCOPE_SPACE_URL }}
+        run: |
+          # 1. 克隆魔塔创空间仓库至临时目录
+          git clone "https://${MODELSCOPE_USERNAME}:${MODELSCOPE_TOKEN}@${MODELSCOPE_SPACE_URL}" ../deploy_space
+          
+          # 2. 清空临时目录（保留 .git 历史记录）
+          cd ../deploy_space
+          find . -maxdepth 1 ! -name '.' ! -name '..' ! -name '.git' -exec rm -rf {} +
+          
+          # 3. 将本地项目中的 elevator 内容同步至该目录下
+          cp -r $GITHUB_WORKSPACE/elevator/* .
+          
+          # 4. 配置 Git 用户信息并提交
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          
+          # 仅在有内容变更时提交与推送，防止空提交报错
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Sync elevator from GitHub (Commit: ${GITHUB_SHA})"
+            git push origin master
+          else
+            echo "No changes to sync."
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Trigger Studio Deployment via ModelScope CLI
+        run: |
+          pip install modelscope
+          # 登录 ModelScope 平台
+          modelscope login --token ${{ secrets.MODELSCOPE_TOKEN }}
+          # 调用 CLI 工具进行部署
+          ms studio deploy --studio-id ${{ secrets.MODELSCOPE_SPACE_ID }}
+          echo "Deployment triggered successfully!"
